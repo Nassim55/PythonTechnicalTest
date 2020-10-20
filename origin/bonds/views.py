@@ -48,8 +48,6 @@ class BondViewSet(viewsets.ModelViewSet):
 
         return Response({ 'response': { 'messgage': 'You have successfully retreived your bond/bonds', 'data': serializer.data } })
 
-            
-
 
     # Create method allows a user to create a bond in the database using the Bond model:
     def create(self, request, *args, **kwargs):
