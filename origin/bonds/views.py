@@ -22,12 +22,22 @@ class BondViewSet(viewsets.ModelViewSet):
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
 
+
     # List method allows a user to get all of the bond they have saved in the database
     # Only allows the user to retreive bonds that they are authorised to get:
     def list(self, request):
-        requested_bond = Bond.objects.filter(user = request.user)
-        serializer = BondSerializer(requested_bond, many=True)
-        return Response({'response': serializer.data})
+        # Checking if there is a filter in the get request. If there isn't return the 
+        # full list of bonds related to the user:
+        legal_name = request.GET.get('legal_name')
+        if legal_name:
+            requested_bond = Bond.objects.get(lei = legal_name)
+            serializer = BondSerializer(requested_bond)
+        else:
+            requested_bond = Bond.objects.filter(user = request.user)
+            serializer = BondSerializer(requested_bond, many=True)
+
+        return Response({ 'response': { 'messgage': 'You have successfully retreived your bond/bonds', 'data': serializer.data } })
+
 
     # Create method allows a user to create a bond in the database using the Bond model:
     def create(self, request, *args, **kwargs):
