@@ -11,11 +11,26 @@ from bonds.models import Bond
 
 
 class BondViewSet(viewsets.ModelViewSet):
-    # Defining view set:
+    # Defining, the user can only access the methods associated with this view if they are 
+    # logged in and have an auth token:
     serializer_class = BondSerializer
     queryset = Bond.objects.all()
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
+
+    # Create method allows a user to create a bond in the database using the Bond model:
+    def create(self, request, *args, **kwargs):
+        Bond.objects.create(
+            user = request.user,
+            isin = request.data['isin'],
+            size = request.data['size'],
+            currency = request.data['currency'],
+            maturity = request.data['maturity'],
+            lei = request.data['lei'],
+        )
+
+        # Returning the response of successfully saved Bond.
+        return Response({'response': 'You have successfully saved your bond!'})
 
 
 
