@@ -1,3 +1,6 @@
+# External library imports:
+import requests
+
 # Rest framework imports:
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -30,7 +33,7 @@ class BondViewSet(viewsets.ModelViewSet):
         # full list of bonds related to the user:
         legal_name = request.GET.get('legal_name')
         if legal_name:
-            requested_bond = Bond.objects.get(lei = legal_name)
+            requested_bond = Bond.objects.get(legal_name = legal_name)
             serializer = BondSerializer(requested_bond)
         else:
             requested_bond = Bond.objects.filter(user = request.user)
@@ -42,6 +45,13 @@ class BondViewSet(viewsets.ModelViewSet):
     # Create method allows a user to create a bond in the database using the Bond model:
     def create(self, request, *args, **kwargs):
         # Before creating a bond we need to get the legal name from the external API:
+        lei = request.data['lei']
+        response = requests.get(f'https://leilookup.gleif.org/api/v2/leirecords?lei={lei}')
+        data = response.json()
+
+        # Defining the legal name and removing whitespace:
+        legal_name = data[0]['Entity']['LegalName']['$']
+        legal_name = legal_name.replace(' ', '')
 
         # Creates the bond object oin the database:
         Bond.objects.create(
@@ -51,6 +61,7 @@ class BondViewSet(viewsets.ModelViewSet):
             currency = request.data['currency'],
             maturity = request.data['maturity'],
             lei = request.data['lei'],
+            legal_name = legal_name,
         )
 
         # Returning the response of successfully saved Bond.

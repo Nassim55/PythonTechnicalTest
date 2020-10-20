@@ -9,3 +9,4 @@ class Bond(models.Model):
     currency = models.CharField(max_length=3)
     maturity = models.CharField(max_length=10)
     lei = models.CharField(max_length=100)
+    legal_name = models.CharField(max_length=100)
