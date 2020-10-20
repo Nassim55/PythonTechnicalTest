@@ -33,13 +33,22 @@ class BondViewSet(viewsets.ModelViewSet):
         # full list of bonds related to the user:
         legal_name = request.GET.get('legal_name')
         if legal_name:
-            requested_bond = Bond.objects.get(legal_name = legal_name)
-            serializer = BondSerializer(requested_bond)
+            try:
+                requested_bond = Bond.objects.filter(user = request.user).get(legal_name = legal_name)
+                serializer = BondSerializer(requested_bond)
+            except Bond.DoesNotExist:
+                return Response(status = status.HTTP_404_NOT_FOUND)
         else:
             requested_bond = Bond.objects.filter(user = request.user)
             serializer = BondSerializer(requested_bond, many=True)
 
+            # If the serializer contains no data return a 404 error:
+            if len(serializer.data) == 0:
+                return Response(status = status.HTTP_404_NOT_FOUND)
+
         return Response({ 'response': { 'messgage': 'You have successfully retreived your bond/bonds', 'data': serializer.data } })
+
+            
 
 
     # Create method allows a user to create a bond in the database using the Bond model:
