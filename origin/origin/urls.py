@@ -10,4 +10,5 @@ urlpatterns = [
     path('', HelloWorld.as_view()),
     path('auth', obtain_auth_token),
     path('bonds/', include('bonds.urls')),
+    path('users/', include('user.urls')),
 ]
