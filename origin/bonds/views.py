@@ -34,8 +34,8 @@ class BondViewSet(viewsets.ModelViewSet):
         legal_name = request.GET.get('legal_name')
         if legal_name:
             try:
-                requested_bond = Bond.objects.filter(user = request.user).get(legal_name = legal_name)
-                serializer = BondSerializer(requested_bond)
+                requested_bond = Bond.objects.filter(user = request.user, legal_name = legal_name)
+                serializer = BondSerializer(requested_bond, many=True)
             except Bond.DoesNotExist:
                 return Response(status = status.HTTP_404_NOT_FOUND)
         else:
@@ -53,7 +53,21 @@ class BondViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         # Before creating a bond we need to get the legal name from the external API:
         lei = request.data['lei']
-        response = requests.get(f'https://leilookup.gleif.org/api/v2/leirecords?lei={lei}')
+
+        # Fetching the legal name from the api
+        try:
+            response = requests.get(f'https://leilookup.gleif.org/api/v2/leirecords?lei={lei}')
+            response.raise_for_status()
+        except requests.exceptions.HTTPError as errh:
+            return Response(status = status.HTTP_404_NOT_FOUND)
+        except requests.exceptions.ConnectionError as errc:
+            return Response({'response': 'An Error Connecting to the API occurred'})
+        except requests.exceptions.Timeout as errt:
+            return Response({'response': 'A Timeout Error occurred'})
+        except requests.exceptions.RequestException as err:
+            return Response({'response': 'An Unknown Error occurred'})
+       
+        # Defining the data:
         data = response.json()
 
         # Defining the legal name and removing whitespace:
@@ -73,6 +87,8 @@ class BondViewSet(viewsets.ModelViewSet):
 
         # Returning the response of successfully saved Bond.
         return Response({'response': 'You have successfully saved your bond!'})
+        
+
 
     
 
